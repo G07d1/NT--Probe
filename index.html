@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NT-Probe Trainer: Strom, Magnetfeld und Bewegung</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--tx:#1d2433;--mu:#5d6778;--bd:#d9deea;--ac:#2f6fed;--ok:#1e9d57;--okb:#dff5e8;--no:#d33b3b;--nob:#fbe3e3;--sel:#e3ecff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171f;--card:#1d222d;--tx:#e8ecf4;--mu:#9aa5b8;--bd:#333b4b;--ac:#6b9bff;--ok:#4cc884;--okb:#183a28;--no:#ff7a7a;--nob:#432026;--sel:#25324f}}
+:root[data-theme="dark"]{--bg:#14171f;--card:#1d222d;--tx:#e8ecf4;--mu:#9aa5b8;--bd:#333b4b;--ac:#6b9bff;--ok:#4cc884;--okb:#183a28;--no:#ff7a7a;--nob:#432026;--sel:#25324f}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 -apple-system,system-ui,"Segoe UI",Roboto,sans-serif}
+.w{max-width:640px;margin:0 auto;padding:14px}
+h1{font-size:19px;margin:4px 0 12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+button{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px 12px;cursor:pointer;text-align:left}
+.tab,.chip{flex:1;text-align:center}.chip{padding:7px 10px;font-size:14px;flex:none}
+.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px}
+.mu{color:var(--mu);font-size:14px}.q{font-weight:600;margin:6px 0 12px}
+.opt{display:block;width:100%;margin-bottom:8px}
+.ok{background:var(--okb);border-color:var(--ok)}.no{background:var(--nob);border-color:var(--no)}
+.fb{margin-top:10px;padding:10px;border-radius:10px;background:var(--sel);font-size:15px}
+.prim{background:var(--ac);color:#fff;border-color:var(--ac);margin-top:10px;text-align:center}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cols button{font-size:14px;margin-bottom:0;height:100%}.sel{background:var(--sel);border-color:var(--ac)}
+.lock{background:var(--okb);border-color:var(--ok);opacity:.7}
+.it{display:flex;gap:8px;align-items:center;margin-bottom:8px}.it .t{flex:1;padding:10px;border:1px solid var(--bd);border-radius:10px}
+.it button{padding:8px 12px;text-align:center}
+.big{font-size:28px;font-weight:700}
+input{width:100%;font:inherit;padding:10px;margin-bottom:8px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx)}
+.bar{height:8px;background:var(--bd);border-radius:6px;margin:3px 0 8px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ok)}
+.soft{background:var(--sel);border-color:var(--ac)}
+.flip{min-height:130px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:19px;font-weight:600;padding:16px;border:2px dashed var(--bd);border-radius:14px;cursor:pointer;margin:8px 0}
+</style></head><body><div class="w">
+<h1>NT-Probe: Strom, Magnetfeld und Bewegung</h1>
+<div id="acct" class="mu" style="margin-bottom:8px"></div><div class="row" id="tabs"></div>
+<div class="row" id="chips"></div>
+<div id="prog"></div><div id="main"></div>
+</div>
+<script>
+const TH={1:"Strom und Magnetfelder",2:"Der Elektromagnet",3:"Lorentzkraft",4:"Elektromotor"};
+// Quiz: [Thema, Frage, richtig, [falsche...], Erklärung]
+const Q=[
+[1,"Was entsteht, wenn elektrischer Strom durch einen geraden Leiter fließt?","Ein Magnetfeld um den Leiter",["Ein Magnetfeld nur an den Enden","Nichts","Ein Eisenkern"],"Um jeden stromdurchflossenen Leiter entsteht ein Magnetfeld."],
+[1,"Wie verlaufen die Feldlinien um einen geraden Leiter?","Kreisförmig um den Leiter",["Gerade, parallel zum Leiter","Sternförmig vom Leiter weg","Gar nicht, es gibt keine"],"Die Feldlinien sind Kreise um den Leiter."],
+[1,"Wovon hängt die Richtung des Magnetfeldes ab?","Von der Stromrichtung",["Von der Dicke des Drahtes","Von der Farbe des Drahtes","Von der Länge des Drahtes"],"Kehrt man die Stromrichtung um, ändert sich die Richtung des Magnetfeldes."],
+[1,"Womit kann man die Richtung des Magnetfeldes bestimmen?","Mit Kompassnadel oder Rechte-Hand-Regel",["Mit einem Lineal","Mit einer Waage","Mit einem Thermometer"],"Die Kompassnadel zeigt die Feldrichtung, die Rechte-Hand-Regel sagt sie voraus."],
+[1,"Rechte-Hand-Regel: Wofür steht der Daumen?","Für die Stromrichtung",["Für die Richtung des Magnetfeldes","Für die Stärke des Stroms","Für den Nordpol"],"Daumen = Stromrichtung, gekrümmte Finger = Richtung des Magnetfeldes."],
+[1,"Rechte-Hand-Regel: Wofür stehen die gekrümmten Finger?","Für die Richtung des Magnetfeldes",["Für die Stromrichtung","Für die Lorentzkraft","Für die Windungszahl"],"Daumen = Stromrichtung, gekrümmte Finger = Richtung des Magnetfeldes."],
+[2,"Was nennt man eine stromdurchflossene Spule, die wie ein Magnet wirkt?","Elektromagnet",["Kommutator","Stator","Relais"],"Fließt Strom durch eine Spule, entsteht ein Magnetfeld. Die Spule wirkt wie ein Magnet."],
+[2,"Was macht das Magnetfeld einer Spule NICHT stärker?","Weniger Windungen",["Mehr Windungen","Größerer Strom","Ein Eisenkern"],"Stärker wird es durch mehr Windungen, größeren Strom und einen Eisenkern."],
+[2,"Welchen Vorteil hat ein Elektromagnet gegenüber einem normalen Magneten?","Er kann ein- und ausgeschaltet werden",["Er ist immer stärker","Er braucht keinen Strom","Er hat nur einen Pol"],"Strom an: Magnetfeld da. Strom aus: Magnetfeld weg."],
+[2,"Wofür wird ein Hebemagnet eingesetzt?","Zum Heben von schweren Metallteilen",["Zum Schalten eines zweiten Stromkreises","Zum Antrieb eines Motors","Zum Messen der Stromstärke"],"Beispiel für einen Elektromagneten: schwere Metallteile anheben."],
+[2,"Was ist ein Relais?","Ein Elektromagnet mit einem Schalter",["Ein Motor mit Rotor","Ein Magnet ohne Spule","Ein Messgerät"],"Ein Relais kann einen zweiten Stromkreis ein- oder ausschalten."],
+[3,"Wie heißt die Kraft auf einen stromdurchflossenen Leiter in einem Magnetfeld?","Lorentzkraft",["Schwerkraft","Reibungskraft","Federkraft"],"Auf einen stromdurchflossenen Leiter in einem Magnetfeld wirkt die Lorentzkraft."],
+[3,"Was passiert bei der Leiterschaukel, wenn man die Stromrichtung umkehrt?","Der Draht bewegt sich in die andere Richtung",["Der Draht bewegt sich in dieselbe Richtung","Der Draht bleibt stehen","Der Draht schmilzt"],"Die Bewegungsrichtung hängt von der Stromrichtung ab."],
+[3,"Wann wird die Lorentzkraft stärker? (mehr als eine Antwort stimmt, wähle die vollständige)","Mehr Strom und stärkeres Magnetfeld",["Nur bei weniger Strom","Nur bei schwächerem Magnetfeld","Weder noch"],"Die Lorentzkraft wird stärker, wenn mehr Strom fließt und das Magnetfeld stärker ist."],
+[3,"Wann bewegt sich der Draht bei der Leiterschaukel?","Wenn Strom fließt",["Immer","Wenn kein Strom fließt","Nur ohne Magnet"],"Der Leiter befindet sich im Magnetfeld und bewegt sich, sobald Strom fließt."],
+[4,"Was macht ein Elektromotor?","Er wandelt elektrische Energie in Bewegung um",["Er wandelt Bewegung in Strom um","Er speichert Strom","Er erzeugt Wärme aus Licht"],"Ein Elektromotor treibt viele Geräte und Maschinen an."],
+[4,"Was ist der Stator?","Der feste Teil, der das Magnetfeld erzeugt",["Der drehbare Teil","Der Polwender","Die Batterie"],"Stator = fest, erzeugt das Magnetfeld."],
+[4,"Was ist der Rotor (Läufer)?","Der drehbare Teil, der durch Strom zum Elektromagneten wird",["Der feste Teil des Motors","Der Polwender","Ein Dauermagnet im Gehäuse"],"Der Rotor wird durch den Strom zum Elektromagneten und dreht sich."],
+[4,"Was macht der Kommutator (Polwender)?","Er kehrt die Stromrichtung im Rotor immer wieder um",["Er erzeugt das Magnetfeld","Er hält den Rotor fest","Er speichert Energie"],"Dadurch kann sich der Rotor weiterdrehen."],
+[4,"Wo wird KEIN Elektromotor eingesetzt?","In einem Lineal",["Im Föhn","Im Elektroauto","Im Industrieroboter"],"Elektromotoren stecken z. B. in Föhn, Waschmaschine, Ventilator, Bohrmaschine, Industrieroboter, Elektroauto und Zug."]
+];
+// Zuordnen: [Thema, Begriff, Erklärung]
+const M=[
+[1,"Magnetfeld","Bereich, in dem magnetische Kräfte wirken"],
+[1,"Feldlinien","Verlauf des Magnetfeldes"],
+[2,"Elektromagnet","Spule mit Strom wirkt wie ein Magnet"],
+[2,"Relais","Elektromagnet mit Schalter für einen zweiten Stromkreis"],
+[2,"Hebemagnet","Hebt schwere Metallteile"],
+[3,"Lorentzkraft","Kraft auf stromdurchflossenen Leiter im Magnetfeld"],
+[3,"Leiterschaukel","Experiment: Draht bewegt sich im Magnetfeld, wenn Strom fließt"],
+[4,"Stator","Fester Teil des Motors"],
+[4,"Rotor (Läufer)","Drehbarer Teil des Motors"],
+[4,"Kommutator (Polwender)","Kehrt die Stromrichtung um"]
+];
+// Reihenfolge
+const O=[
+{t:4,n:"So funktioniert ein Elektromotor",s:["Strom fließt durch den Motor, die Spule im Rotor wird zum Elektromagneten","Ungleiche Pole ziehen sich an, gleiche stoßen sich ab: der Rotor dreht sich","Der Kommutator kehrt die Stromrichtung um","Nordpol und Südpol des Rotors wechseln ihre Seiten","Der Rotor dreht sich weiter"]},
+{t:3,n:"Experiment mit der Leiterschaukel",s:["Zuerst fließt kein Strom: die Leiterschaukel bewegt sich nicht","Strom fließt: die Leiterschaukel bewegt sich in eine Richtung","Die Stromrichtung wird umgekehrt","Die Leiterschaukel bewegt sich in die andere Richtung"]}
+];
+// ===== Supabase (siehe Anleitung): hier URL und anon-Key eintragen. Leer = nur lokal speichern =====
+const SB_URL="",SB_KEY="";
+const $=s=>document.querySelector(s),sh=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a},pick=a=>a[Math.random()*a.length|0];
+const PR=["Super!","Stark!","Genau richtig!","Sehr gut!","Das sitzt!"],EX=["Fast! Schau dir kurz die Erklärung an:","Gleich nochmal, dann sitzt es:","Kein Problem, so merkst du es dir:"];
+const C=M.map(x=>[x[0],x[1],x[2]]).concat([[1,"Rechte-Hand-Regel","Daumen = Stromrichtung, gekrümmte Finger = Richtung des Magnetfeldes"],[2,"Was macht den Elektromagneten stärker?","Mehr Windungen, größerer Strom, Eisenkern"],[3,"Wann wird die Lorentzkraft stärker?","Wenn mehr Strom fließt und das Magnetfeld stärker ist"],[4,"Wozu dient der Elektromotor?","Er wandelt elektrische Energie in Bewegung um"]]);
+let mode="quiz",th=0,st={},P={},acct=null,tmr;
+const LS=k=>{try{return localStorage.getItem(k)}catch(e){return null}},SS=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+async function sha(s){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
+async function rpc(f,b){const r=await fetch(SB_URL+"/rest/v1/rpc/"+f,{method:"POST",headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY,"Content-Type":"application/json"},body:JSON.stringify(b)});if(!r.ok)throw 0;return r.json()}
+const merge=(a,b)=>{const o={...a};for(const k in b)o[k]=Math.max(o[k]||0,b[k]);return o};
+const setSync=t=>{const e=$("#sy");if(e)e.textContent=acct.n+" · "+t};
+function save(){SS("p:"+acct.k,JSON.stringify(P));if(!SB_URL)return;setSync("speichert …");clearTimeout(tmr);tmr=setTimeout(async()=>{try{await rpc("save_progress",{p_key:acct.k,p_data:P});setSync("gespeichert ✓")}catch(e){setSync("offline, lokal gesichert")}},800)}
+async function login(n,pin){n=n.trim();if(!n||pin.length<4)return;const k=await sha(n.toLowerCase()+":"+pin);acct={n,k};SS("acct",JSON.stringify({n,pin}));P=JSON.parse(LS("p:"+k)||"{}");try{P=merge(P,await rpc("load_progress",{p_key:k})||{});save()}catch(e){}start()}
+function loginView(){["#acct","#tabs","#chips","#prog"].forEach(s=>$(s).innerHTML="");$("#main").innerHTML=`<div class="card"><div class="q">Hallo! Wer lernt heute?</div><input id="nm" placeholder="Name"><input id="pn" placeholder="PIN (mind. 4 Zahlen)" inputmode="numeric" maxlength="8"><button class="prim" style="width:100%" onclick="login($('#nm').value,$('#pn').value)">Los geht’s</button><p class="mu">Mit Name und PIN findest du deinen Lernstand auf jedem Gerät wieder.</p></div>`}
+const ok=id=>(P[id]||0)>=2;
+function prog(){$("#prog").innerHTML=`<div class="card" style="margin-bottom:10px">`+Object.entries(TH).map(([t,l])=>{const ids=[...Q.map((x,i)=>[x[0],"q"+i]),...C.map((x,i)=>[x[0],"c"+i])].filter(x=>x[0]==t),n=ids.filter(x=>ok(x[1])).length;return `<div class="mu">${l}: ${n} von ${ids.length} sitzen schon</div><div class="bar"><i style="width:${n/ids.length*100}%"></i></div>`}).join("")+"</div>"}
+function head(){
+ $("#acct").innerHTML=SB_URL?`<span id="sy">${acct.n}</span> <button class="chip" onclick="localStorage.removeItem('acct');loginView()">Wechseln</button>`:"";
+ $("#tabs").innerHTML=[["quiz","Quiz"],["cards","Karten"],["match","Zuordnen"],["order","Reihenfolge"]].map(([k,l])=>`<button class="tab ${mode==k?"on":""}" style="padding:10px 4px" onclick="mode='${k}';start()">${l}</button>`).join("");
+ $("#chips").innerHTML=mode=="order"?"":[[0,"Alle"],...Object.entries(TH).map(([k,v])=>[+k,k+" "+v])].map(([k,l])=>`<button class="chip ${th==k?"on":""}" onclick="th=${k};start()">${l}</button>`).join("");
+}
+function start(){head();prog();({quiz:quiz,cards:cards,match:match,order:order})[mode](true)}
+const items=k=>sh((k=="q"?Q:C).map((x,i)=>({id:k+i,x})).filter(o=>!th||o.x[0]==th)).sort((a,b)=>ok(a.id)-ok(b.id)).slice(0,10);
+const done=(t,n)=>`<div class="card"><div class="big">Starke Runde! 🎉</div><p>Du hast ${n} ${t} geübt. Weiter so!</p><button class="prim" style="width:100%" onclick="start()">Noch eine Runde</button></div>`;
+function quiz(n){
+ if(n){st.q=items("q");st.n=0;st.d=false;st.o=null;st.r=new Set}
+ const m=$("#main");if(st.n>=st.q.length){m.innerHTML=done("Fragen",st.q.length-st.r.size);return}
+ const x=st.q[st.n].x;if(!st.o)st.o=sh([x[2],...x[3]]);
+ m.innerHTML=`<div class="card"><div class="mu">${TH[x[0]]}</div><div class="q">${x[1]}</div>${st.o.map((t,k)=>`<button class="opt" id="o${k}" onclick="ans(${k})">${t}</button>`).join("")}<div id="fb"></div></div>`;
+}
+function ans(k){
+ if(st.d)return;st.d=true;const o=st.q[st.n],x=o.x,good=st.o[k]==x[2];
+ if(good){P[o.id]=(P[o.id]||0)+1;save()}else if(!st.r.has(o.id)){st.r.add(o.id);st.q.push(o)}
+ st.o.forEach((t,j)=>{const b=$("#o"+j);if(t==x[2])b.classList.add("ok");else if(j==k)b.classList.add("soft")});
+ $("#fb").innerHTML=`<div class="fb">${good?pick(PR):pick(EX)} ${x[4]}</div><button class="prim" style="width:100%" onclick="st.n++;st.d=false;st.o=null;quiz();prog()">Weiter</button>`;
+}
+function cards(n){
+ if(n){st.c=items("c");st.n=0;st.f=false;st.r=new Set}
+ const m=$("#main");if(st.n>=st.c.length){m.innerHTML=done("Karten",st.c.length-st.r.size);return}
+ const x=st.c[st.n].x;
+ m.innerHTML=`<div class="card"><div class="mu">${TH[x[0]]}</div><div class="flip" onclick="st.f=!st.f;cards()">${st.f?x[2]:x[1]}</div>${st.f?`<div class="row"><button class="tab ok" onclick="cd(1)">Kann ich ✓</button><button class="tab" onclick="cd(0)">Nochmal üben</button></div>`:`<p class="mu">Überlege kurz, dann tippe die Karte zum Umdrehen.</p>`}</div>`;
+}
+function cd(g){const o=st.c[st.n];if(g){P[o.id]=(P[o.id]||0)+1;save()}else if(!st.r.has(o.id)){st.r.add(o.id);st.c.push(o)}st.n++;st.f=false;cards();prog()}
+function match(n){
+ if(n){st.p=sh(M.filter(x=>!th||x[0]==th)).slice(0,5);st.r=sh(st.p.map((x,i)=>i));st.a=null;st.done=new Set}
+ const L=st.p.map((x,i)=>`<button class="${st.done.has(i)?"lock":st.a===i?"sel":""}" onclick="pa(${i})">${x[1]}</button>`).join(""),R=st.r.map(i=>`<button id="r${i}" class="${st.done.has(i)?"lock":""}" onclick="pb(${i})">${st.p[i][2]}</button>`).join("");
+ $("#main").innerHTML=`<div class="card"><div class="mu">Tippe einen Begriff und dann die passende Erklärung.</div><div class="cols" style="margin-top:10px"><div style="display:grid;gap:8px">${L}</div><div style="display:grid;gap:8px">${R}</div></div>${st.done.size==st.p.length?`<div class="fb">Alle Paare gefunden! 🎉</div>`:""}<button class="prim" style="width:100%" onclick="match(true)">Neue Runde</button></div>`;
+}
+function pa(i){if(st.done.has(i))return;st.a=i;match()}
+function pb(i){if(st.a===null||st.done.has(i))return;if(st.a===i){st.done.add(i);st.a=null;match()}else{st.a=null;match();const e=$("#r"+i);e.classList.add("soft");setTimeout(()=>e.classList.remove("soft"),600)}}
+function order(n){
+ if(n){st.k=((st.k??-1)+1)%O.length;st.l=sh(O[st.k].s);while(st.l.join()==O[st.k].s.join())st.l=sh(O[st.k].s);st.c=null}
+ const o=O[st.k],all=st.l.every((t,i)=>t==o.s[i]);
+ $("#main").innerHTML=`<div class="card"><div class="mu">${TH[o.t]}</div><div class="q">Bringe in die richtige Reihenfolge: ${o.n}</div>${st.l.map((t,i)=>`<div class="it"><div class="t ${st.c&&o.s[i]==t?"ok":""}">${t}</div><button onclick="mv(${i},-1)">↑</button><button onclick="mv(${i},1)">↓</button></div>`).join("")}${st.c?`<div class="fb">${all?"Alles richtig! 🎉":"Die grünen Schritte stehen schon richtig. Probier die anderen nochmal."}</div>`:""}<button class="prim" style="width:100%" onclick="st.c=true;order()">Prüfen</button><button class="prim" style="width:100%" onclick="order(true)">Nächste Aufgabe</button></div>`;
+}
+function mv(i,d){const j=i+d;if(j<0||j>=st.l.length)return;[st.l[i],st.l[j]]=[st.l[j],st.l[i]];st.c=null;order()}
+(()=>{if(!SB_URL){acct={n:"",k:"lokal"};P=JSON.parse(LS("p:lokal")||"{}");return start()}const a=JSON.parse(LS("acct")||"null");a?login(a.n,a.pin):loginView()})();
+</script></body></html>
