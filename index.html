@@ -80,7 +80,7 @@ const O=[
 {t:3,n:"Experiment mit der Leiterschaukel",s:["Zuerst fließt kein Strom: die Leiterschaukel bewegt sich nicht","Strom fließt: die Leiterschaukel bewegt sich in eine Richtung","Die Stromrichtung wird umgekehrt","Die Leiterschaukel bewegt sich in die andere Richtung"]}
 ];
 // ===== Supabase (siehe Anleitung): hier URL und anon-Key eintragen. Leer = nur lokal speichern =====
-const SB_URL="",SB_KEY="";
+const SB_URL="https://reithvwizkydktydpwni.supabase.co/rest/v1/",SB_KEY="sb_publishable_BhaAQzt8wwHf2RZctuwhIA_MPz2nkvj";
 const $=s=>document.querySelector(s),sh=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a},pick=a=>a[Math.random()*a.length|0];
 const PR=["Super!","Stark!","Genau richtig!","Sehr gut!","Das sitzt!"],EX=["Fast! Schau dir kurz die Erklärung an:","Gleich nochmal, dann sitzt es:","Kein Problem, so merkst du es dir:"];
 const C=M.map(x=>[x[0],x[1],x[2]]).concat([[1,"Rechte-Hand-Regel","Daumen = Stromrichtung, gekrümmte Finger = Richtung des Magnetfeldes"],[2,"Was macht den Elektromagneten stärker?","Mehr Windungen, größerer Strom, Eisenkern"],[3,"Wann wird die Lorentzkraft stärker?","Wenn mehr Strom fließt und das Magnetfeld stärker ist"],[4,"Wozu dient der Elektromotor?","Er wandelt elektrische Energie in Bewegung um"]]);
