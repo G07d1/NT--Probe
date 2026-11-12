@@ -87,16 +87,16 @@ const C=M.map(x=>[x[0],x[1],x[2]]).concat([[1,"Rechte-Hand-Regel","Daumen = Stro
 let mode="quiz",th=0,st={},P={},acct=null,tmr;
 const LS=k=>{try{return localStorage.getItem(k)}catch(e){return null}},SS=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 async function sha(s){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
-async function rpc(f,b){const r=await fetch(SB_URL+"/rest/v1/rpc/"+f,{method:"POST",headers:{apikey:SB_KEY,...(SB_KEY.startsWith("eyJ")?{Authorization:"Bearer "+SB_KEY}:{}),"Content-Type":"application/json"},body:JSON.stringify(b)});if(!r.ok)throw 0;return r.json()}
+async function rpc(f,b){const r=await fetch(SB_URL+"/rest/v1/rpc/"+f,{method:"POST",headers:{apikey:SB_KEY,...(SB_KEY.startsWith("eyJ")?{Authorization:"Bearer "+SB_KEY}:{}),"Content-Type":"application/json"},body:JSON.stringify(b)});if(!r.ok)throw new Error(r.status+" "+(await r.text()).slice(0,150));return r.json()}
 const merge=(a,b)=>{const o={...a};for(const k in b)o[k]=Math.max(o[k]||0,b[k]);return o};
 const setSync=t=>{const e=$("#sy");if(e)e.textContent=acct.n+" · "+t};
-function save(){SS("p:"+acct.k,JSON.stringify(P));if(!SB_URL)return;setSync("speichert …");clearTimeout(tmr);tmr=setTimeout(async()=>{try{await rpc("save_progress",{p_key:acct.k,p_data:P});setSync("gespeichert ✓")}catch(e){setSync("offline, lokal gesichert")}},800)}
-async function login(n,pin){n=n.trim();if(!n||pin.length<4)return;const k=await sha(n.toLowerCase()+":"+pin);acct={n,k};SS("acct",JSON.stringify({n,pin}));P=JSON.parse(LS("p:"+k)||"{}");try{P=merge(P,await rpc("load_progress",{p_key:k})||{});save()}catch(e){}start()}
+function save(){SS("p:"+acct.k,JSON.stringify(P));if(!SB_URL)return;setSync("speichert …");clearTimeout(tmr);tmr=setTimeout(async()=>{try{await rpc("save_progress",{p_key:acct.k,p_data:P});setSync("gespeichert ✓")}catch(e){window.lastErr="Fehler: "+e.message;setSync(window.lastErr)}},800)}
+async function login(n,pin){n=n.trim();if(!n||pin.length<4)return;const k=await sha(n.toLowerCase()+":"+pin);acct={n,k};SS("acct",JSON.stringify({n,pin}));P=JSON.parse(LS("p:"+k)||"{}");try{P=merge(P,await rpc("load_progress",{p_key:k})||{});save()}catch(e){window.lastErr="Fehler: "+e.message}start()}
 function loginView(){["#acct","#tabs","#chips","#prog"].forEach(s=>$(s).innerHTML="");$("#main").innerHTML=`<div class="card"><div class="q">Hallo! Wer lernt heute?</div><input id="nm" placeholder="Name"><input id="pn" placeholder="PIN (mind. 4 Zahlen)" inputmode="numeric" maxlength="8"><button class="prim" style="width:100%" onclick="login($('#nm').value,$('#pn').value)">Los geht’s</button><p class="mu">Mit Name und PIN findest du deinen Lernstand auf jedem Gerät wieder.</p></div>`}
 const ok=id=>(P[id]||0)>=2;
 function prog(){$("#prog").innerHTML=`<div class="card" style="margin-bottom:10px">`+Object.entries(TH).map(([t,l])=>{const ids=[...Q.map((x,i)=>[x[0],"q"+i]),...C.map((x,i)=>[x[0],"c"+i])].filter(x=>x[0]==t),n=ids.filter(x=>ok(x[1])).length;return `<div class="mu">${l}: ${n} von ${ids.length} sitzen schon</div><div class="bar"><i style="width:${n/ids.length*100}%"></i></div>`}).join("")+"</div>"}
 function head(){
- $("#acct").innerHTML=SB_URL?`<span id="sy">${acct.n}</span> <button class="chip" onclick="localStorage.removeItem('acct');loginView()">Wechseln</button>`:"";
+ $("#acct").innerHTML=SB_URL?`<span id="sy">${acct.n}</span> <button class="chip" onclick="localStorage.removeItem('acct');loginView()">Wechseln</button>`:"";if(window.lastErr&&SB_URL)setSync(window.lastErr);
  $("#tabs").innerHTML=[["quiz","Quiz"],["cards","Karten"],["match","Zuordnen"],["order","Reihenfolge"]].map(([k,l])=>`<button class="tab ${mode==k?"on":""}" style="padding:10px 4px" onclick="mode='${k}';start()">${l}</button>`).join("");
  $("#chips").innerHTML=mode=="order"?"":[[0,"Alle"],...Object.entries(TH).map(([k,v])=>[+k,k+" "+v])].map(([k,l])=>`<button class="chip ${th==k?"on":""}" onclick="th=${k};start()">${l}</button>`).join("");
 }
